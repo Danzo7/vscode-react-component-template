@@ -1,16 +1,15 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as mustache from 'mustache';
-import REACT_TEMPLATES from './templates/react';
-import { FILE } from 'dns';
-
-export const buildReactTemplate = ({scss,typescript,storybook}: { scss: Boolean,typescript:boolean,storybook:boolean}, componentName: string, cPath: string) => {
+import buildInBoiler from './component-boilerplate.js';
+/*
+ const buildReactTemplate = ({ scss, typescript, storybook }: { scss: Boolean, typescript: boolean, storybook: boolean }, componentName: string, cPath: string) => {
     
     let stylingExtension = scss ? ".scss" : ".css";
-    let indexExtension = typescript? ".ts" : ".js";
+    let indexExtension = typescript ? ".ts" : ".js";
     let componentExtension = `${indexExtension}x`;
 
-    const FILE_NAMES = {
+    const options = {
         styleDir: `style`,
         styling: `style/index${stylingExtension}`,
         component: `${componentName}${componentExtension}`,
@@ -18,50 +17,66 @@ export const buildReactTemplate = ({scss,typescript,storybook}: { scss: Boolean,
         storybook: `${componentName}.stories${componentExtension}`
     };
 
-    const COMPONENT_TEMPLATE = indexExtension === ".ts" ? REACT_TEMPLATES.TS_TEMPLATE : REACT_TEMPLATES.JS_TEMPLATE;
-    
+    const COMPONENT_TEMPLATE = indexExtension === ".ts" ? buildInTemplate.typescript : buildInTemplate.javascript;
+    fs.mkdirSync(path.join(
+        cPath,
+        options.styleDir
+    ));
     // Writing main component file
-   fs.writeFileSync(
+    fs.writeFileSync(
         path.join(
             cPath,
-            FILE_NAMES.component
+            options.component
         ),
-        mustache.render(COMPONENT_TEMPLATE, {componentName})
+        mustache.render(COMPONENT_TEMPLATE, { componentName })
     );
 
     // Writing component index file
-     fs.writeFileSync(
+    fs.writeFileSync(
         path.join(
             cPath,
-            FILE_NAMES.componentIndex
+            options.componentIndex
         ),
-        mustache.render(REACT_TEMPLATES.INDEX, {componentName})
+        mustache.render(buildInTemplate.index, { componentName })
     );
     
-    // Creating style directory
-     fs.mkdirSync(path.join(
-        cPath,
-        FILE_NAMES.styleDir
-    ));
+   
 
     // Writing component styling file
-     fs.writeFileSync(
+    fs.writeFileSync(
         path.join(
             cPath,
-            FILE_NAMES.styling
+            options.styling
         ),
-        mustache.render(REACT_TEMPLATES.STYLING, {componentName})
+        mustache.render(buildInTemplate.style, { componentName })
     );
 
     // Writing storybook file
-    if(storybook) {
-   fs.writeFileSync(
+    if (storybook) {
+        fs.writeFileSync(
             path.join(
                 cPath,
-                FILE_NAMES.storybook
+                options.storybook
             ),
-            mustache.render(REACT_TEMPLATES.STORYBOOK, {componentName})
+            mustache.render(buildInTemplate.storybook, { componentName })
         );
     }
-
-}
+ };*/
+ const buildTemplate = (componentName: string, cPath: string, workspace: string) => {
+     const boilerplateFile = path.join(workspace, "components-boilerplate.js");
+     console.log(workspace);
+    fs.mkdirSync(cPath,{ recursive: true });
+    const plates: [string, string][] = JSON.parse(mustache.render((fs.existsSync(boilerplateFile) ? require(boilerplateFile) : buildInBoiler).toString(),{ componentName }));
+ //    const plates: [string, string][] = Object.entries(config);
+     plates.forEach(([tPath, content]) => {
+         if (path.dirname(tPath) !== ".") {
+             fs.mkdirSync(path.join(cPath, path.dirname(tPath)), { recursive: true });
+         };
+        fs.writeFileSync(
+            path.join(
+                cPath,tPath),
+            content
+        );
+    });
+};
+export default  buildTemplate;
